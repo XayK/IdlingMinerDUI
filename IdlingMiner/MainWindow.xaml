@@ -5,11 +5,12 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:IdlingMiner"
         mc:Ignorable="d"
-        Title="MainWindow" Height="224.377" Width="571.884" Closed="Window_Closed" StateChanged="Window_StateChanged">
+        Title="MainWindow" Height="224.377" Width="571.884" Closed="Window_Closed" StateChanged="Window_StateChanged" SizeToContent="WidthAndHeight">
     <Grid Margin="0,0,-33,12">
         <Grid.RowDefinitions>
-            <RowDefinition Height="67*"/>
-            <RowDefinition Height="24*"/>
+            <RowDefinition Height="81*"/>
+            <RowDefinition Height="52*"/>
+            <RowDefinition Height="48*"/>
         </Grid.RowDefinitions>
         <Grid.ColumnDefinitions>
             <ColumnDefinition Width="68*"/>
@@ -19,10 +20,13 @@
         <TextBox x:Name="textBoxPool" HorizontalAlignment="Left" Height="23" Margin="0,41,0,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Width="328" Grid.Column="1"/>
         <Label x:Name="labelPool" Content="Enter Pool" Margin="66,46,94,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Center" Width="64"/>
         <Label x:Name="labelUser" Content="Enter User" Margin="66,10,94,0" VerticalAlignment="Top" Height="26" HorizontalAlignment="Center" Width="64"/>
-        <Button x:Name="button" Content="Start" HorizontalAlignment="Left" Margin="45,23,0,0" VerticalAlignment="Top" Width="75" Click="button_Click" Height="22" Grid.Row="1"/>
-        <Button x:Name="buttonStop" Content="Stop" HorizontalAlignment="Left" Margin="10,23,0,0" VerticalAlignment="Top" Width="75" Click="button_ClickStop" Grid.Column="1" Height="22" Grid.Row="1"/>
-        <Label x:Name="labelPool_Copy" Content="Miner&#xD;&#xA;status" HorizontalAlignment="Center" Margin="66,87,84,0" VerticalAlignment="Top" Height="47" Width="74" RenderTransformOrigin="0.481,-0.465"/>
-        <TextBox x:Name="textBox1" Grid.Column="1" Height="23" Margin="50,90,155,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top"/>
+        <Button x:Name="button" Content="START/STOP" HorizontalAlignment="Left" Margin="77,16,0,0" VerticalAlignment="Top" Width="74" Click="button_Click" Height="22" Grid.Row="2" RenderTransformOrigin="-0.107,0.409"/>
+        <Button x:Name="buttonStop" Content="Save" HorizontalAlignment="Left" Margin="241,13,0,0" VerticalAlignment="Top" Width="76" Click="button_ClickStop" Height="22" Grid.Row="2" Grid.Column="1"/>
+        <Label x:Name="labelPool_Copy" Content="Miner&#xD;&#xA;status" HorizontalAlignment="Center" Margin="61,4,89,0" VerticalAlignment="Top" Height="46" Width="74" RenderTransformOrigin="0.481,-0.465" Grid.Row="1"/>
+        <TextBox x:Name="textBox1" Grid.Column="1" Height="24" Margin="160,10,45,0" TextWrapping="Wrap" Text="TextBox" VerticalAlignment="Top" Grid.Row="1"/>
+        <CheckBox x:Name="CheckBox1" Content="AUTOSTART" Grid.Column="1" HorizontalAlignment="Left" Margin="137,17,0,0" Grid.Row="2" VerticalAlignment="Top" Width="91"/>
+        <Button Content="ADD &#xD;&#xA;AutoRun" Grid.Column="1" HorizontalAlignment="Left" Margin="10,5,0,0" Grid.Row="2" VerticalAlignment="Top" Width="53" Height="33" Click="Button_Click_1"/>
+        <Button Content="DEL &#xD;&#xA;AutoRun" Grid.Column="1" HorizontalAlignment="Left" Margin="68,5,0,0" Grid.Row="2" VerticalAlignment="Top" Width="53" Height="33" Click="Button_Click_2"/>
 
     </Grid>
 </Window>

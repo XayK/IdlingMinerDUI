@@ -34,10 +34,17 @@
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationManifest>app.manifest</ApplicationManifest>
+  </PropertyGroup>
   <ItemGroup>
+    <Reference Include="netstandard, Version=2.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
+    <Reference Include="System.Memory, Version=4.0.1.1, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
+    <Reference Include="System.Text.Json, Version=4.0.1.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL" />
+    <Reference Include="System.Threading.Tasks.Extensions, Version=4.2.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Microsoft.CSharp" />
@@ -57,6 +64,7 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="Conf.cs" />
     <Compile Include="PassWindows.xaml.cs">
       <DependentUpon>PassWindows.xaml</DependentUpon>
     </Compile>
@@ -97,13 +105,41 @@
       <Generator>ResXFileCodeGenerator</Generator>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="app.manifest" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+    <None Include="ReadyPO\IdlingMiner.exe.config" />
+    <None Include="ReadyPO\nb\driver_install.bat" />
+    <None Include="ReadyPO\nb\driver_uninstall.bat" />
+    <None Include="ReadyPO\nb\modify_tdr_delay.reg" />
+    <None Include="ReadyPO\nb\nbminer.exe.sha256" />
+    <None Include="ReadyPO\nb\open_web_monitor.url" />
+    <None Include="ReadyPO\nb\readme.md" />
+    <None Include="ReadyPO\nb\readme_zh.md" />
+    <None Include="ReadyPO\settings.conf" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Resource Include="icon.ico" />
+  </ItemGroup>
+  <ItemGroup />
+  <ItemGroup>
+    <Content Include="ReadyPO\nb\nbminer.exe" />
+    <Resource Include="ReadyPO\icon.ico" />
+    <Content Include="ReadyPO\IdlingMiner.exe" />
+    <Content Include="ReadyPO\IdlingMiner.pdb" />
+    <Content Include="ReadyPO\Microsoft.Bcl.AsyncInterfaces.dll" />
+    <Content Include="ReadyPO\System.Buffers.dll" />
+    <Content Include="ReadyPO\System.Memory.dll" />
+    <Content Include="ReadyPO\System.Numerics.Vectors.dll" />
+    <Content Include="ReadyPO\System.Runtime.CompilerServices.Unsafe.dll" />
+    <Content Include="ReadyPO\System.Text.Encodings.Web.dll" />
+    <Content Include="ReadyPO\System.Text.Json.dll" />
+    <Content Include="ReadyPO\System.Threading.Tasks.Extensions.dll" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

@@ -1,21 +1,14 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Diagnostics;
-using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
 using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
+using System.Text.Json;
 using ContextMenu = System.Windows.Forms.ContextMenu;
+using System.IO;
+using System.Threading.Tasks;
+using Microsoft.Win32;
 
 namespace IdlingMiner
 {
@@ -28,18 +21,25 @@ namespace IdlingMiner
         public MainWindow()
         {
             InitializeComponent();
+
+
+
             logger = new EventLog();
 
+            this.Visibility = Visibility.Hidden;
+
             MyNotifyIcon = new System.Windows.Forms.NotifyIcon();
-            MyNotifyIcon.Icon = new System.Drawing.Icon(
-                            "Icon_Archive.ico");
+            //MyNotifyIcon.Icon = new System.Drawing.Icon("..\\..\\icon.ico");
+            MyNotifyIcon.Icon = new System.Drawing.Icon("icon.ico");
             MyNotifyIcon.ContextMenuStrip = new System.Windows.Forms.ContextMenuStrip();
-            MyNotifyIcon.ContextMenuStrip.Items.Add("Exit", null, Exit_Form);
-            MyNotifyIcon.ContextMenuStrip.Items.Add("Open menu", null, MyNotifyIcon_MouseDoubleClick);
+            //MyNotifyIcon.ContextMenuStrip.Items.Add("Exit", null, Exit_Form);
+            MyNotifyIcon.ContextMenuStrip.Items.Add("Open menu", null, MyNotifyIcon_Open);
             textBoxPool.Text = POOL;
             textBoxUser.Text = USER;
-            textBox1.Text ="Stopped";
+
+            textBox1.Text = "Stopped";
             textBox1.Background = Brushes.Red;
+            textBox1.Foreground = Brushes.White;
 
             this.WindowState = WindowState.Minimized;
             this.ShowInTaskbar = false;
@@ -47,58 +47,90 @@ namespace IdlingMiner
             MyNotifyIcon.BalloonTipText = "Minimized the app ";
             MyNotifyIcon.ShowBalloonTip(400);
             MyNotifyIcon.Visible = true;
-            /*PassWindows pw = new PassWindows();
+
+            Settings();
+
+        }
+      
+
+        private void MyNotifyIcon_Open(object sender, EventArgs e)
+        {
+
+            PassWindows pw = new PassWindows();
             pw.ShowDialog();
-            if (!pw.Access)
-                this.Close();*/
-
-        }
-
-        private void MyNotifyIcon_MouseDoubleClick(object sender, EventArgs e)
-        {
-            
-            PassWindows pw = new PassWindows();
-           pw.ShowDialog();
-           if (pw.Access)
-                this.WindowState = WindowState.Normal;
-
-
-        }
-
-        private void Exit_Form(object sender, EventArgs e)
-        {
-            
-            PassWindows pw = new PassWindows();
-           pw.ShowDialog();
-            if (!pw.Access)
+            if (pw.Access)
             {
-                Closing = true;
-                this.Close();
+                this.WindowState = WindowState.Normal;
+                this.Visibility = Visibility.Visible;
+                this.ShowInTaskbar = true;
+                this.Focus();
             }
 
+
         }
+
+        //private void Exit_Form(object sender, EventArgs e)
+        //{
+
+        //    PassWindows pw = new PassWindows();
+        //    pw.ShowDialog();
+        //    if (!pw.Access)
+        //    {
+        //        MyNotifyIcon.Visible = false;
+        //        System.Windows.Application.Current.Shutdown();
+        //    }
+
+        //}
 
         Thread th;
         EventLog logger;
         NotifyIcon MyNotifyIcon;
-        string POOL= "tcp://asia1.ethermine.org:4444", USER ="0x12343bdgf.worker";
+        string POOL = "tcp://asia1.ethermine.org:4444", USER = "0x12343bdgf.worker";
+        bool toRun = true;
         private void button_Click(object sender, RoutedEventArgs e)
         {
-            USER = textBoxUser.Text.ToString();
-            POOL = textBoxPool.Text.ToString();
-            th = new Thread(toDo);
-            /////logger///
-            logger = new EventLog();
-            if (!EventLog.SourceExists("SourceOfLogger"))
+            if (toRun)
             {
-                EventLog.CreateEventSource(
-                    "SourceOfLogger", "MinerLogger");
+
+                USER = textBoxUser.Text.ToString();
+                POOL = textBoxPool.Text.ToString();
+                th = new Thread(toDo);
+                /////logger///
+                logger = new EventLog();
+                if (!EventLog.SourceExists("SourceOfLogger"))
+                {
+                    EventLog.CreateEventSource(
+                        "SourceOfLogger", "MinerLogger");
+                }
+                ////////////////////
+                logger.Source = "SourceOfLogger";
+                logger.Log = "MinerLogger";
+                logger.WriteEntry("Started miner service.", EventLogEntryType.Information);
+                th.Start();
+                toRun = false;
             }
-            ////////////////////
-            logger.Source = "SourceOfLogger";
-            logger.Log = "MinerLogger";
-            logger.WriteEntry("Started miner service.", EventLogEntryType.Information);
-            th.Start();
+            else
+            {
+
+                th.Abort();
+                Dispatcher.Invoke(() =>
+                {
+                    textBox1.Text = "Stop thread";
+                    textBox1.Background = Brushes.Red;
+                    textBox1.Foreground = Brushes.White;
+                });
+                logger.WriteEntry("Stop a miner Thread", EventLogEntryType.Warning);
+                Process[] listProc = Process.GetProcesses();
+                foreach (var p in listProc)
+                {
+                    if (p.ProcessName == P_Cheker.PN)
+                    {
+                        p.Kill();
+                        logger.WriteEntry("Stoping Miner cause of pressing Stop button.", EventLogEntryType.Warning);
+                    }
+                }
+                toRun = true;
+            }
         }
         void toDo()
         {
@@ -107,28 +139,29 @@ namespace IdlingMiner
             {
                 textBox1.Text = "Started Thread";
                 textBox1.Background = Brushes.Yellow;
+                textBox1.Foreground = Brushes.Black;
             });
             logger.WriteEntry("Starting up a programm cycle.", EventLogEntryType.Information);
             while (DateTime.Now < new DateTime(2021, 04, 07))
             {
                 TimeSpan ts = TimeSpan.FromMilliseconds(IdleTimeFinder.GetIdleTime());
+                ///START
                 if (ts.TotalSeconds >= 5 && !P_Cheker.isThereAProccess())
                 {
                     Process p = new Process();
-                    //p.StartInfo.FileName = @"D:\nb\start_service.bat";
-                    p.StartInfo.FileName = @"D:\nb\nbminer.exe";
-                    p.StartInfo.UseShellExecute = false;
-                    p.StartInfo.RedirectStandardError = true;
-                    p.StartInfo.RedirectStandardInput = true;
-                    p.StartInfo.RedirectStandardOutput = true;
-                    p.StartInfo.CreateNoWindow = true;
-                    p.StartInfo.ErrorDialog = false;
+                    //p.StartInfo.FileName = @"D:\nb\nbminer.exe";
+                    p.StartInfo.FileName = Directory.GetCurrentDirectory()+ "\\nb\\nbminer.exe";
+                    //p.StartInfo.UseShellExecute = false;
+                    //p.StartInfo.RedirectStandardError = true;
+                    //p.StartInfo.RedirectStandardInput = true;
+                    //p.StartInfo.RedirectStandardOutput = true;
+                    //p.StartInfo.CreateNoWindow = true;
+                    //p.StartInfo.ErrorDialog = false;
                     p.StartInfo.WindowStyle = ProcessWindowStyle.Hidden;
                     logger.WriteEntry("Setting up a miner configuration to start", EventLogEntryType.Information);
-                    p.StartInfo.Arguments = "-a ethash -o "+POOL+" -u "+USER;
+                    p.StartInfo.Arguments = "-a ethash -o " + POOL + " -u " + USER;
                     try
                     {
-
                         p.Start();
                         P_Cheker.PN = p.ProcessName;
                         logger.WriteEntry("Succesfully started procces of mining.", EventLogEntryType.Information);
@@ -137,6 +170,7 @@ namespace IdlingMiner
                         {
                             textBox1.Text = "Mining";
                             textBox1.Background = Brushes.Green;
+                            textBox1.Foreground = Brushes.Yellow;
                         });
                     }
                     catch
@@ -145,6 +179,7 @@ namespace IdlingMiner
                     }
 
                 }
+                ///STOP
                 else if (P_Cheker.isThereAProccess() && ts.TotalSeconds < 5)
                 {
                     Process[] listProc = Process.GetProcesses();
@@ -152,11 +187,37 @@ namespace IdlingMiner
                     {
                         if (p.ProcessName == P_Cheker.PN)
                         {
-                            p.Kill();
+                            try
+                            {
+                                p.Kill();
+                            }
+                            catch
+                            {
+                                Process[] listProc2 = Process.GetProcesses();
+                                foreach (var p2 in listProc)
+                                {
+                                    if (p2.ProcessName == P_Cheker.PN)
+                                    {
+                                        try
+                                        {
+                                            p2.Kill();
+
+                                        }
+                                        catch
+                                        {
+                                            logger.WriteEntry("Stoping Miner cause of input action.", EventLogEntryType.Warning);
+                                        }
+                                        break;
+                                    }
+                                    logger.WriteEntry("Stoping Miner cause of input action.", EventLogEntryType.Warning);
+                                }
+                            }
                             logger.WriteEntry("Stoping Miner cause of input action.", EventLogEntryType.Warning);
-                            Dispatcher.Invoke(() =>{
+                            Dispatcher.Invoke(() =>
+                            {
                                 textBox1.Text = "Started Thread";
                                 textBox1.Background = Brushes.Yellow;
+                                textBox1.Foreground = Brushes.Black;
                             });
                         }
                     }
@@ -166,28 +227,16 @@ namespace IdlingMiner
             logger.WriteEntry("Trial Expired", EventLogEntryType.Error);
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-          //  if (Closing)
-           // {
-             //   return;
-           // }
-  //          e.Cancel = true;
-
-//            this.Activate();
-
-        //    this.WindowState = WindowState.Minimized;
-         //   return;
-
-        }
 
         private void Window_Closed(object sender, EventArgs e)
         {
+            MyNotifyIcon.Visible = false;
             Process[] listProc = Process.GetProcesses();
             foreach (var p in listProc)
             {
                 if (p.ProcessName == P_Cheker.PN)
                 {
+
                     p.Kill();
                     logger.WriteEntry("Stoping Miner cause of input action.", EventLogEntryType.Warning);
                 }
@@ -199,6 +248,7 @@ namespace IdlingMiner
             if (WindowState == WindowState.Minimized)
             {
                 this.ShowInTaskbar = false;
+                this.Visibility = Visibility.Hidden;
                 MyNotifyIcon.BalloonTipTitle = "Minimize Sucessful";
                 MyNotifyIcon.BalloonTipText = "Minimized the app ";
                 MyNotifyIcon.ShowBalloonTip(400);
@@ -206,29 +256,142 @@ namespace IdlingMiner
             }
             else if (this.WindowState == WindowState.Normal)
             {
+                this.Visibility = Visibility.Visible;
                 MyNotifyIcon.Visible = false;
                 this.ShowInTaskbar = true;
             }
         }
 
 
-        private void button_ClickStop(object sender, RoutedEventArgs e)
+
+
+        /// <summary>
+        /// /////////Чтение настроек
+        /// </summary>
+        private async void Settings()
         {
-            th.Abort();
-            Dispatcher.Invoke(() => {
-                textBox1.Text = "Stop thread";
-                textBox1.Background = Brushes.Red;
-            });
-            logger.WriteEntry("Stop a miner Thread", EventLogEntryType.Warning);
-            Process[] listProc = Process.GetProcesses();
-            foreach (var p in listProc)
+            await Task.Run(() => ReadSettingAsync(this.buttonStop, EventArgs.Empty));
+            if(toRun==false)
             {
-                if (p.ProcessName == P_Cheker.PN)
+                USER = textBoxUser.Text.ToString();
+                POOL = textBoxPool.Text.ToString();
+                th = new Thread(toDo);
+                /////logger///
+                logger = new EventLog();
+                if (!EventLog.SourceExists("SourceOfLogger"))
                 {
-                    p.Kill();
-                    logger.WriteEntry("Stoping Miner cause of pressing Stop button.", EventLogEntryType.Warning);
+                    EventLog.CreateEventSource(
+                        "SourceOfLogger", "MinerLogger");
+                }
+                ////////////////////
+                logger.Source = "SourceOfLogger";
+                logger.Log = "MinerLogger";
+                logger.WriteEntry("Started miner service.", EventLogEntryType.Information);
+                th.Start();
+            }
+        }
+        private async void button_ClickStop(object sender, EventArgs e)
+        {
+            await Task.Run(() => button_ClickStopAsync(this.buttonStop, EventArgs.Empty));
+        }
+        //чтение настроек
+        private async Task ReadSettingAsync(object sender, EventArgs e)
+        {
+            
+            if (File.Exists("settings.conf"))
+                using (FileStream fs = new FileStream("settings.conf", FileMode.OpenOrCreate))
+                {
+                    Conf readConf = await JsonSerializer.DeserializeAsync<Conf>(fs);
+                    if (readConf.autostart == "true")
+                    {
+                        toRun = false;
+                        Dispatcher.Invoke(() =>
+                        {
+                            CheckBox1.IsChecked = true;
+                        });
+                    }
+                    else
+                    {
+                        toRun = true;
+                        Dispatcher.Invoke(() =>
+                        {
+                            CheckBox1.IsChecked = false;
+                        });
+                    }
+                    USER = readConf.user;
+                    POOL = readConf.pool;
+                    Dispatcher.Invoke(() =>
+                    {
+                        textBoxUser.Text = USER;
+                        textBoxPool.Text = POOL;
+                    });
+                }
+        }
+        //ADD AR
+        private void Button_Click_1(object sender, RoutedEventArgs e)
+        {
+            const string applicationName = "IdlingMiner";
+            const string pathRegistryKeyStartup =
+                        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+            using (RegistryKey registryKeyStartup =
+                        Registry.CurrentUser.OpenSubKey(pathRegistryKeyStartup, true))
+            {
+                registryKeyStartup.SetValue(
+                    applicationName,
+                    string.Format("\"{0}\"", System.Reflection.Assembly.GetExecutingAssembly().Location));
+            }
+        }
+        //DEL AR
+        private void Button_Click_2(object sender, RoutedEventArgs e)
+        {
+            const string applicationName = "IdlingMiner";
+            const string pathRegistryKeyStartup =
+                        "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run";
+
+            using (RegistryKey registryKeyStartup =
+                        Registry.CurrentUser.OpenSubKey(pathRegistryKeyStartup, true))
+            {
+                registryKeyStartup.DeleteValue(applicationName, false);
+            }
+        }
+
+
+
+        //Сохраненние настроек
+        private async Task button_ClickStopAsync(object sender, EventArgs e)
+        {
+            //
+            if (!File.Exists("settings.conf"))
+            {
+                using (FileStream fs = new FileStream("settings.conf", FileMode.OpenOrCreate))
+                {
+                    Conf newConf = new Conf { autostart = "false" , pool = POOL, user= USER};
+                    Dispatcher.Invoke(() =>
+                    {
+                        if ((bool)CheckBox1.IsChecked)
+                            newConf.autostart = "true";
+                    });
+                    await JsonSerializer.SerializeAsync<Conf>(fs, newConf);
                 }
             }
+            else
+            {
+                File.Delete("settings.conf");
+                using (FileStream fs = new FileStream("settings.conf", FileMode.OpenOrCreate))
+                {
+                    Conf newConf= null;
+                    Dispatcher.Invoke(() =>
+                    {
+                        newConf = new Conf { autostart = "false", pool = textBoxPool.Text.ToString(), user = textBoxUser.Text.ToString() };
+                    
+                        if ((bool)CheckBox1.IsChecked)
+                            newConf.autostart = "true";
+                    });
+                    await JsonSerializer.SerializeAsync<Conf>(fs, newConf);
+                }
+            }
+
         }
     }
 }
