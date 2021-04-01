@@ -40,17 +40,42 @@ namespace IdlingMiner
             textBoxUser.Text = USER;
             textBox1.Text ="Stopped";
             textBox1.Background = Brushes.Red;
+
+            this.WindowState = WindowState.Minimized;
+            this.ShowInTaskbar = false;
+            MyNotifyIcon.BalloonTipTitle = "Minimize Sucessful";
+            MyNotifyIcon.BalloonTipText = "Minimized the app ";
+            MyNotifyIcon.ShowBalloonTip(400);
+            MyNotifyIcon.Visible = true;
+            /*PassWindows pw = new PassWindows();
+            pw.ShowDialog();
+            if (!pw.Access)
+                this.Close();*/
+
         }
 
         private void MyNotifyIcon_MouseDoubleClick(object sender, EventArgs e)
         {
-            this.WindowState = WindowState.Normal;
+            
+            PassWindows pw = new PassWindows();
+           pw.ShowDialog();
+           if (pw.Access)
+                this.WindowState = WindowState.Normal;
+
+
         }
 
         private void Exit_Form(object sender, EventArgs e)
         {
-            Closing = true;
-            this.Close();
+            
+            PassWindows pw = new PassWindows();
+           pw.ShowDialog();
+            if (!pw.Access)
+            {
+                Closing = true;
+                this.Close();
+            }
+
         }
 
         Thread th;
